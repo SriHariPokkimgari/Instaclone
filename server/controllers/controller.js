@@ -2,6 +2,8 @@ import User from "../dataBase/models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import getDataUri from "../utils/datauri.js";
+import cloudinary from "../utils/cloudinary.js";
 dotenv.config();
 const handleResponse = (res, status, message, data = null) => {
   res.status(status).json({
@@ -43,10 +45,8 @@ export const login = async (req, res) => {
     }
 
     let user = await User.findOne({ email });
-    console.log(user);
     if (!user) return handleResponse(res, 404, "email or password incorrect");
     let isPassword = await bcrypt.compare(password, user.password);
-    console.log(isPassword);
     if (!isPassword)
       return handleResponse(res, 401, "email or password incorrect");
 
@@ -62,7 +62,7 @@ export const login = async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
-    res.cookie("loginToken", token, {
+    res.cookie("token", token, {
       httpOnly: true,
       maxAge: 24 * 60 * 60,
       sameSite: "strict",
@@ -102,6 +102,47 @@ export const getProfile = async (req, res) => {
       posts: user.posts,
     };
     return handleResponse(res, 200, "user details fetched successful", user);
+  } catch (error) {
+    console.log(error);
+    res.end();
+  }
+};
+
+export const editProfile = async (req, res) => {
+  const { bio } = req.body;
+  const userId = req.id;
+  const profilePicture = req.file;
+  let cloudResponse;
+  try {
+    if (profilePicture) {
+      const fileUri = getDataUri(profilePicture);
+      cloudResponse = await cloudinary.uploader.upload(fileUri);
+    }
+    const user = await User.findById(userId);
+    if (!user) return handleResponse(res, 404, "user not found");
+    if (bio) user.bio = bio;
+    if (profilePicture) user.profilePicture = cloudResponse.secure_url;
+    await User.save();
+    return handleResponse(res, 202, "edit profile successful");
+  } catch (error) {
+    console.log(error);
+    res.end();
+  }
+};
+
+export const getSuggestedUser = async (req, res) => {
+  try {
+    const suggestedUsers = await User.find({ _id: { $ne: req.id } }).select(
+      "-password"
+    );
+    if (!suggestedUsers)
+      return handleResponse(res, 200, "currently no suggested users");
+    return handleResponse(
+      res,
+      200,
+      "suggested users fetched successully",
+      suggestedUsers
+    );
   } catch (error) {
     console.log(error);
     res.end();
