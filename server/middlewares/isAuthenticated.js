@@ -4,7 +4,7 @@ export const isAuthenticated = async (req, res, next) => {
   const token = req.cookies.token;
   try {
     if (!token)
-      return resizeBy.status(401).json({
+      return res.status(401).json({
         status: 401,
         message: "not valid",
       });
@@ -12,7 +12,9 @@ export const isAuthenticated = async (req, res, next) => {
     req.id = decode.id;
     next();
   } catch (error) {
-    console.log(error);
-    res.end();
+    return res.status(500).json({
+      status: 500,
+      message: "something went wrong",
+    });
   }
 };

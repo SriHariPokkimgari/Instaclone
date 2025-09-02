@@ -14,8 +14,8 @@ const handleResponse = (res, status, message, data = null) => {
 };
 
 export const createAccount = async (req, res) => {
-  const { username, email, password } = req.body;
   try {
+    const { username, email, password } = req.body;
     if (!username || !email || !password) {
       return handleResponse(res, 401, "credentials missing");
     }
@@ -38,8 +38,8 @@ export const createAccount = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
     if (!email || !password) {
       return handleResponse(res, 401, "email or password missing");
     }
@@ -64,56 +64,42 @@ export const login = async (req, res) => {
     });
     res.cookie("token", token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60,
+      maxAge: 24 * 60 * 60 * 1000,
       sameSite: "strict",
     });
     handleResponse(res, 200, `Welcome back ${user.username}`, user);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error });
+    return handleResponse(res, 500, "something went wrong", error);
   }
 };
 
 export const logout = (_, res) => {
   try {
-    res.cookie("loginToken", "", { maxAge: 0 });
+    res.cookie("token", "", { maxAge: 0 });
     handleResponse(res, 202, "Logout successfully");
   } catch (error) {
-    console.log(error);
-    res.end();
+    return handleResponse(res, 500, "something went wrong");
   }
 };
 
 export const getProfile = async (req, res) => {
-  const username = req.params.username;
-  console.log(req.params);
   try {
+    const username = req.params.username;
     if (!username) return handleResponse(res, 400, "username is missing");
-    let user = await User.findOne({ username });
-    console.log(user);
+    let user = await User.findOne({ username }).select("-password");
     if (!user) return handleResponse(res, 404, "user not found");
-    user = {
-      _id: user._id,
-      username: user.username,
-      profilePicture: user.profilePicture,
-      bio: user.bio,
-      followers: user.followers,
-      following: user.following,
-      posts: user.posts,
-    };
     return handleResponse(res, 200, "user details fetched successful", user);
   } catch (error) {
-    console.log(error);
-    res.end();
+    return handleResponse(res, 500, "something went wrong");
   }
 };
 
 export const editProfile = async (req, res) => {
-  const { bio } = req.body;
-  const userId = req.id;
-  const profilePicture = req.file;
-  let cloudResponse;
   try {
+    const { bio } = req.body;
+    const userId = req.id;
+    const profilePicture = req.file;
+    let cloudResponse;
     if (profilePicture) {
       const fileUri = getDataUri(profilePicture);
       cloudResponse = await cloudinary.uploader.upload(fileUri);
@@ -122,15 +108,15 @@ export const editProfile = async (req, res) => {
     if (!user) return handleResponse(res, 404, "user not found");
     if (bio) user.bio = bio;
     if (profilePicture) user.profilePicture = cloudResponse.secure_url;
-    await User.save();
+    await user.save();
     return handleResponse(res, 202, "edit profile successful");
   } catch (error) {
     console.log(error);
-    res.end();
+    return handleResponse(res, 500, "something went wrong", error);
   }
 };
 
-export const getSuggestedUser = async (req, res) => {
+export const getSuggestedUsers = async (req, res) => {
   try {
     const suggestedUsers = await User.find({ _id: { $ne: req.id } }).select(
       "-password"
@@ -143,6 +129,51 @@ export const getSuggestedUser = async (req, res) => {
       "suggested users fetched successully",
       suggestedUsers
     );
+  } catch (error) {
+    console.log(error);
+    res.end();
+  }
+};
+
+export const followUsers = async (req, res) => {
+  try {
+    const userId = req.id;
+    const targetUsername = req.params.username;
+    const user = await User.findById(userId);
+    const targetUser = await User.findOne({ username: targetUsername });
+    if (!user || !targetUser) {
+      return handleResponse(res, 404, "user not found");
+    }
+    if (user._id === targetUser._id)
+      return handleResponse(res, 400, "You do not follow youself");
+
+    const following = user.following.includes(targetUser._id);
+
+    if (following) {
+      await Promise.all([
+        User.updateOne(
+          { _id: user._id },
+          { $pull: { following: targetUser._id } }
+        ),
+        User.updateOne(
+          { _id: targetUser._id },
+          { $pull: { followers: user._id } }
+        ),
+      ]);
+      return handleResponse(res, 200, "unfollow successful");
+    } else {
+      await Promise.all([
+        User.updateOne(
+          { _id: user._id },
+          { $push: { following: targetUser._id } }
+        ),
+        User.updateOne(
+          { _id: targetUser._id },
+          { $push: { followers: user._id } }
+        ),
+      ]);
+      return handleResponse(res, 200, "follow successful");
+    }
   } catch (error) {
     console.log(error);
     res.end();
