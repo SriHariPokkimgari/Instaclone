@@ -1,55 +1,58 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 
-const userSchema = new Schema({
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    minlength: [3, "Username must be at least 4 charactars long"],
-    maxlength: [30, "Username must be below 30 characters"],
-    lowercase: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    lowercase: true,
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: [6, "password must be at least 6 characters long"],
-  },
-  profilePicture: {
-    type: String,
-    default: "",
-  },
-  bio: {
-    type: String,
-    default: "",
-  },
-  followers: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+const userSchema = new Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      minlength: [3, "Username must be at least 4 charactars long"],
+      maxlength: [30, "Username must be below 30 characters"],
+      lowercase: true,
     },
-  ],
-  following: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
     },
-  ],
-  posts: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Post",
+    password: {
+      type: String,
+      required: true,
+      minlength: [6, "password must be at least 6 characters long"],
     },
-  ],
-});
+    profilePicture: {
+      type: String,
+      default: "",
+    },
+    bio: {
+      type: String,
+      default: "",
+    },
+    followers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    following: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    posts: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
 // userSchema.virtual("followersCount").get(function () {
 //   return this.followers.length;
