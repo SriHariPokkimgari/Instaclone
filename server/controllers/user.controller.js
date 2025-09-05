@@ -101,8 +101,11 @@ export const editProfile = async (req, res) => {
     const profilePicture = req.file;
     let cloudResponse;
     if (profilePicture) {
+      console.log(1);
       const fileUri = getDataUri(profilePicture);
+      console.log(2);
       cloudResponse = await cloudinary.uploader.upload(fileUri);
+      console.log(3);
     }
     const user = await User.findById(userId);
     if (!user) return handleResponse(res, 404, "user not found");

@@ -98,7 +98,7 @@ export const getAutherPost = async (req, res) => {
 export const likePost = async (req, res) => {
   try {
     const autherId = req.id;
-    const { postId } = req.params;
+    const postId = req.params.id;
     const post = await Post.findById(postId);
     if (!post) return handleResponse(res, 404, "post not found");
     await post.updateOne({ $addToSet: { likes: autherId } });
@@ -115,7 +115,7 @@ export const likePost = async (req, res) => {
 export const disLikePost = async (req, res) => {
   try {
     const autherId = req.id;
-    const { postId } = req.params;
+    const postId = req.params.id;
     const post = await Post.findById(postId);
     if (!post) return handleResponse(res, 404, "post not found");
     await post.updateOne({ $pull: { likes: autherId } });
@@ -130,7 +130,7 @@ export const disLikePost = async (req, res) => {
 export const setComment = async (req, res) => {
   try {
     const autherId = req.id;
-    const { postId } = req.params;
+    const postId = req.params.id;
     const { text } = req.body;
     if (!text) return handleResponse(res, 400, "text required");
     const comment = await Comment.create({
@@ -155,12 +155,67 @@ export const setComment = async (req, res) => {
 
 export const getCommentsOfPost = async (req, res) => {
   try {
-    const { postId } = req.params;
+    const postId = req.params.id;
     const comments = await Comment.find({ post: postId })
       .sort({ createdAt: -1 })
       .populate("auther", "username profilePicture");
     if (!comments) return handleResponse(res, 404, "comments not found");
     return handleResponse(res, 200, "fetched all comments", comments);
+  } catch (error) {
+    console.log(error);
+    return handleResponse(res, 500, "something went wrong", error);
+  }
+};
+
+export const deletePost = async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const autherId = req.id;
+    const post = await Post.findById(postId);
+
+    //check post belongs to the auther or not.
+    if (post.auther.toString() !== autherId)
+      return handleResponse(res, 403, "unautherized");
+
+    //delete post.
+    await Post.findByIdAndDelete(postId);
+
+    //deleted post reference delete in user schema.
+    const user = await User.findById(autherId);
+    user.posts = user.posts.filter((id) => id.toString() !== postId);
+    user.save();
+
+    //deleted post comments delete in comments.
+    await Comment.deleteMany({ post: postId });
+
+    return handleResponse(res, 200, "post deleted");
+  } catch (error) {
+    console.log(error);
+    return handleResponse(res, 500, "something went wrong", error);
+  }
+};
+
+export const saveBookMarks = async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const autherId = req.id;
+
+    const post = await Post.findById(postId);
+    if (!post) return handleResponse(res, 404, "post not found");
+
+    const user = await User.findById(autherId);
+
+    if (user.bookmarks.includes(post._id)) {
+      await user.updateOne({ $pull: { bookmarks: post._id } });
+      await user.save();
+      return res
+        .status(200)
+        .json({ type: "unsave", message: "post removed from bookmarks" });
+    } else {
+      await user.updateOne({ $addToSet: { bookmarks: post._id } });
+      await user.save();
+      return res.status(200).json({ type: "save", message: "post bookmarked" });
+    }
   } catch (error) {
     console.log(error);
     return handleResponse(res, 500, "something went wrong", error);
