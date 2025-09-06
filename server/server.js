@@ -1,9 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./dataBase/connection.js";
-import router from "./routes/user.route.js";
+import userRouter from "./routes/user.route.js";
 import cookieParser from "cookie-parser";
 import postRouter from "./routes/post.route.js";
+import commentRouter from "./routes/message.route.js";
 
 dotenv.config();
 const app = express();
@@ -11,8 +12,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use("/api/auth", router);
+app.use("/api/user", userRouter);
 app.use("/api/post", postRouter);
+app.use("api/comment", commentRouter);
 
 connectDB();
 app.listen(process.env.PORT, () =>
