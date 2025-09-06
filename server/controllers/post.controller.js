@@ -16,7 +16,7 @@ export const addNewPost = async (req, res) => {
   try {
     const { caption } = req.body;
     const autherId = req.id;
-    const image = res.file;
+    const image = req.file;
     if (!image) return handleResponse(res, 400, "image is required");
 
     const optimizedImageBuffer = await sharp(image.buffer)
@@ -54,14 +54,14 @@ export const getAllPost = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate({
         path: "auther",
-        select: "username, profilePicture",
+        select: ["username", "profilePicture"],
       })
       .populate({
-        path: "Comments",
+        path: "comments",
         sort: { createdAt: -1 },
         populate: {
           path: "auther",
-          select: "username, profilePicture",
+          select: "username",
         },
       });
     handleResponse(res, 200, "fetched all posts", posts);
@@ -78,10 +78,10 @@ export const getAutherPost = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate({
         path: "auther",
-        select: "username, profilePicture",
+        select: ["username", "profilePicture"],
       })
       .populate({
-        path: "Comments",
+        path: "comments",
         sort: { createdAt: -1 },
         populate: {
           path: "auther",
@@ -172,7 +172,7 @@ export const deletePost = async (req, res) => {
     const postId = req.params.id;
     const autherId = req.id;
     const post = await Post.findById(postId);
-
+    if (!post) return handleResponse(res, 404, "post not found");
     //check post belongs to the auther or not.
     if (post.auther.toString() !== autherId)
       return handleResponse(res, 403, "unautherized");

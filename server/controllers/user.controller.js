@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
+import Post from "../dataBase/models/post.model.js";
 dotenv.config();
 const handleResponse = (res, status, message, data = null) => {
   res.status(status).json({
@@ -50,6 +51,15 @@ export const login = async (req, res) => {
     if (!isPassword)
       return handleResponse(res, 401, "email or password incorrect");
 
+    const populated = await Promise.all(
+      user.posts.map(async (postId) => {
+        const post = await Post.findById(postId);
+        if (post.auther.equals(user._id)) {
+          return post;
+        }
+        return null;
+      })
+    );
     user = {
       _id: user._id,
       username: user.username,
@@ -57,7 +67,8 @@ export const login = async (req, res) => {
       bio: user.bio,
       followers: user.followers,
       following: user.following,
-      posts: user.posts,
+      posts: populated,
+      bookmarks: user.bookmarks,
     };
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
@@ -69,6 +80,7 @@ export const login = async (req, res) => {
     });
     handleResponse(res, 200, `Welcome back ${user.username}`, user);
   } catch (error) {
+    console.log(error);
     return handleResponse(res, 500, "something went wrong", error);
   }
 };
@@ -147,7 +159,8 @@ export const followUsers = async (req, res) => {
     if (!user || !targetUser) {
       return handleResponse(res, 404, "user not found");
     }
-    if (user._id === targetUser._id)
+
+    if (user._id.toString() === targetUser._id.toString())
       return handleResponse(res, 400, "You do not follow youself");
 
     const following = user.following.includes(targetUser._id);

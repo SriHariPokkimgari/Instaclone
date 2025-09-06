@@ -11,17 +11,18 @@ import {
   saveBookMarks,
   setComment,
 } from "../controllers/post.controller.js";
+import upload from "../middlewares/multer.js";
 
-const postRouter = Router();
+const router = Router();
 
-postRouter.post("/newpost", isAuthenticated, addNewPost);
-postRouter.get("/posts", getAllPost);
-postRouter.get("/userposts", isAuthenticated, getAutherPost);
-postRouter.post("/like/:id", isAuthenticated, likePost);
-postRouter.post("/dislike", isAuthenticated, disLikePost);
-postRouter.post("/:id", isAuthenticated, setComment);
-postRouter.get("/:id", getCommentsOfPost);
-postRouter.delete("/:id", isAuthenticated, deletePost);
-postRouter.put("/:id", isAuthenticated, saveBookMarks);
+router.post("/newpost", isAuthenticated, upload.single("image"), addNewPost);
+router.get("/all", getAllPost);
+router.get("/userpost/all", isAuthenticated, getAutherPost);
+router.post("/:id/like", isAuthenticated, likePost);
+router.post("/:id/dislike", isAuthenticated, disLikePost);
+router.post("/:id/comment", isAuthenticated, setComment);
+router.get("/:id/comment/all", getCommentsOfPost);
+router.delete("/delete/:id", isAuthenticated, deletePost);
+router.get("/:id/bookmark", isAuthenticated, saveBookMarks);
 
-export default postRouter;
+export default router;
