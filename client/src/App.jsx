@@ -1,7 +1,13 @@
 import React from "react";
+import { Button } from "./components/ui/button";
+import Signup from "./components/Signup";
 
 const App = () => {
-  return <div>App</div>;
+  return (
+    <>
+      <Signup />
+    </>
+  );
 };
 
 export default App;
