@@ -22,7 +22,7 @@ export const createAccount = async (req, res) => {
     }
 
     let user = await User.findOne({ email });
-    if (user) return handleResponse(res, 401, "user already exists");
+    if (user) return handleResponse(res, 400, "user already exists");
 
     let hashPassword = await bcrypt.hash(password, 10);
 
