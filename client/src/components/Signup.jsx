@@ -11,6 +11,7 @@ const Signup = () => {
     password: "",
   });
   const [message, setMessage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -19,17 +20,20 @@ const Signup = () => {
       console.log(res);
     } catch (error) {
       console.log(error);
+      setMessage(error?.response?.data?.message);
+    } finally {
+      console.log(message);
     }
   };
 
   return (
-    <div className="flex items-center w-screen h-screen justify-center">
+    <div className="flex items-center h-screen justify-center">
       <form
         onSubmit={handleSignup}
-        className="shadow-lg rounded-lg flex flex-col gap-5 p-8"
+        className="shadow-lg rounded-lg w-[350px] flex flex-col gap-5 p-8"
       >
         <div className="my-4">
-          <h2 className="text-center font-bold text-xl ">logo</h2>
+          <h2 className="text-center font-medium text-xl ">Sign up</h2>
           <p className="text-sm text-center ">
             Create your account and start your adventure
           </p>
@@ -70,6 +74,17 @@ const Signup = () => {
           />
         </div>
         <Button>Singup</Button>
+        <div className="text-center text-red-500">
+          {message ? <p>{message}</p> : null}
+        </div>
+        <div className="text-center">
+          <p>
+            Already have an account?
+            <a href="/login" className="underline text-blue-500">
+              Login up
+            </a>
+          </p>
+        </div>
       </form>
     </div>
   );
