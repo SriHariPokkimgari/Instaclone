@@ -3,6 +3,9 @@ import React, { useState } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import axios from "../axios";
+import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -10,19 +13,33 @@ const Signup = () => {
     email: "",
     password: "",
   });
-  const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
-      const res = await axios.post("user/signup", formData);
+      const res = await axios.post("user/signup", formData, {
+        withCredentials: true,
+      });
       console.log(res);
+      toast.success(res?.data?.message);
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+      });
+      navigate("/login");
     } catch (error) {
       console.log(error);
-      setMessage(error?.response?.data?.message);
+      if (error?.response?.data?.data) {
+        toast.error("Username was already used.");
+      } else {
+        toast.error(error?.response?.data?.message);
+      }
     } finally {
-      console.log(message);
+      setIsLoading(false);
     }
   };
 
@@ -73,18 +90,20 @@ const Signup = () => {
             required
           />
         </div>
-        <Button>Singup</Button>
-        <div className="text-center text-red-500">
-          {message ? <p>{message}</p> : null}
-        </div>
-        <div className="text-center">
-          <p>
-            Already have an account?
-            <a href="/login" className="underline text-blue-500">
-              Login up
-            </a>
-          </p>
-        </div>
+        {isLoading ? (
+          <Button>
+            <Loader2 className="mt2 w-4 h-4 animate-spin" />
+            Please wait
+          </Button>
+        ) : (
+          <Button>Signup</Button>
+        )}
+        <span className="text-center">
+          Already have an accoun{" "}
+          <Link className="text-blue-500 underline" to="/login">
+            Login
+          </Link>
+        </span>
       </form>
     </div>
   );

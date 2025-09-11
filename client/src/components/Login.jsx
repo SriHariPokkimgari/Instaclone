@@ -3,25 +3,28 @@ import React, { useState } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import axios from "../axios";
+import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [userData, setUserData] = useState(null);
-  const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
-      const res = await axios.post("/user/login", formData);
+      const res = await axios.post("/user/login", formData, {
+        withCredentials: true,
+      });
       setUserData(res?.data?.data);
-      setIsLoading(true);
+      toast.success(res?.data?.message);
       console.log(res);
     } catch (error) {
       console.log(error);
-      setMessage(error?.response?.data?.message);
+      toast.error(error?.response?.data?.message);
     } finally {
-      console.log(userData);
-      console.log(message);
       setIsLoading(false);
     }
   };
@@ -59,15 +62,21 @@ const Login = () => {
             required
           />
         </div>
-        <Button>{isLoading ? "Login..." : "Login"}</Button>
-        <div className="text-center">
-          <p>
-            Don't have an account?
-            <a href="/signup" className="underline text-blue-500">
-              Sign up
-            </a>
-          </p>
-        </div>
+        {isLoading ? (
+          <Button>
+            <Loader2 className="animate-spin mr-2 h-4 w-4" />
+            please wait
+          </Button>
+        ) : (
+          <Button>Login</Button>
+        )}
+
+        <span className="text-center">
+          Doesn't have an account{" "}
+          <Link to="/signup" className="text-blue-500 underline">
+            Signup
+          </Link>
+        </span>
       </form>
     </div>
   );
