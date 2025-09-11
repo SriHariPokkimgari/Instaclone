@@ -1,18 +1,36 @@
 import React from "react";
-import { Button } from "./components/ui/button";
 import Signup from "./components/Signup";
-import { BrowserRouter, Routes, Route } from "react-router";
+import {
+  BrowserRouter,
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
 import Login from "./components/Login";
+import { MainLayout } from "./components/MainLayout";
+import { Home } from "lucide-react";
 
 const App = () => {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    </BrowserRouter>
-  );
+  const browserRouter = createBrowserRouter([
+    {
+      path: "/",
+      element: <MainLayout />,
+      children: [
+        {
+          path: "/",
+          element: <Home />,
+        },
+      ],
+    },
+    {
+      path: "/signup",
+      element: <Signup />,
+    },
+    {
+      path: "/login",
+      element: <Login />,
+    },
+  ]);
+  return <RouterProvider router={browserRouter} />;
 };
 
 export default App;
