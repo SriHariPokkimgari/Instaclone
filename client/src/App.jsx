@@ -7,7 +7,9 @@ import {
 } from "react-router-dom";
 import Login from "./components/Login";
 import { MainLayout } from "./components/MainLayout";
-import { Home } from "lucide-react";
+import Home from "./components/Home";
+import Profile from "./components/Profile";
+import LeftSidebar from "./components/LeftSidebar";
 
 const App = () => {
   const browserRouter = createBrowserRouter([
@@ -18,6 +20,10 @@ const App = () => {
         {
           path: "/",
           element: <Home />,
+        },
+        {
+          path: "/profile",
+          element: <Profile />,
         },
       ],
     },
