@@ -4,13 +4,14 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import axios from "../axios";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -19,8 +20,8 @@ const Login = () => {
         withCredentials: true,
       });
       setUserData(res?.data?.data);
+      navigate("/");
       toast.success(res?.data?.message);
-      console.log(res);
     } catch (error) {
       console.log(error);
       toast.error(error?.response?.data?.message);
