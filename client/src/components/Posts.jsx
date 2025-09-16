@@ -1,7 +1,16 @@
 import React from "react";
+import Post from "./Post";
 
 const Posts = () => {
-  return <div>Posts</div>;
+  return (
+    <div>
+      <div className="flex flex-col gap-4 items-center ">
+        {[1, 2, 3, 4].map((item, index) => (
+          <Post />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default Posts;
