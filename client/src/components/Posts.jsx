@@ -6,7 +6,7 @@ const Posts = () => {
     <div>
       <div className="flex flex-col gap-4 items-center ">
         {[1, 2, 3, 4].map((item, index) => (
-          <Post />
+          <Post key={index} data={item} />
         ))}
       </div>
     </div>
